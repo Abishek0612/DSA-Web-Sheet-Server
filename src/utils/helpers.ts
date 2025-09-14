@@ -49,13 +49,12 @@ export const calculateStreak = (dates: Date[]): number => {
     today.getDate()
   );
 
-  // Check if the most recent date is today or yesterday
   const mostRecent = sortedDates[0];
   const daysDiff = Math.floor(
     (todayDate.getTime() - mostRecent.getTime()) / (1000 * 60 * 60 * 24)
   );
 
-  if (daysDiff > 1) return 0; // Streak broken
+  if (daysDiff > 1) return 0;
 
   for (let i = 1; i < sortedDates.length; i++) {
     const current = sortedDates[i];

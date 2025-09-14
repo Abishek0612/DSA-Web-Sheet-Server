@@ -169,8 +169,6 @@ export class AIController {
     try {
       const { limit = 50, page = 1 } = req.query;
 
-      // This would typically be stored in a database
-      // For now, returning empty array as chat history is stateless
       res.json({
         messages: [],
         pagination: {
@@ -188,7 +186,6 @@ export class AIController {
 
   clearChatHistory = async (req: Request, res: Response): Promise<void> => {
     try {
-      // This would typically clear chat history from database
       res.json({ message: "Chat history cleared successfully" });
     } catch (error) {
       logger.error("Clear chat history error:", error);

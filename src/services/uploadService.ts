@@ -30,10 +30,8 @@ export class UploadService {
       )}`;
       const filepath = path.join(this.avatarDir, filename);
 
-      // Remove old avatar if exists
       await this.removeOldAvatar(userId);
 
-      // Write new avatar
       fs.writeFileSync(filepath, file.buffer);
 
       const avatarUrl = `/uploads/avatars/${filename}`;
@@ -63,7 +61,6 @@ export class UploadService {
 
   async deleteFile(filename: string, userId: string): Promise<boolean> {
     try {
-      // Verify the file belongs to the user (basic security check)
       if (!filename.includes(userId)) {
         return false;
       }

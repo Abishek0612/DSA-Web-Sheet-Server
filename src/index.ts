@@ -42,7 +42,7 @@ app.use(
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 100,
   message: "Too many requests from this IP",
 });
 app.use("/api/", limiter);
@@ -72,7 +72,7 @@ app.get("/health", (req, res) => {
 // Error handling
 app.use(errorHandler);
 
-// Socket.io for real-time features
+// Socket.io
 io.on("connection", (socket) => {
   logger.info("User connected:", socket.id);
 

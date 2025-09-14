@@ -94,7 +94,6 @@ export class AIService {
       const response = await result.response;
       let text = response.text();
 
-      // Clean up the response to ensure valid JSON
       text = text
         .replace(/```json\n?/, "")
         .replace(/```\n?$/, "")

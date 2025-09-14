@@ -71,27 +71,27 @@ export const FILE_TYPES = {
 } as const;
 
 export const MAX_FILE_SIZES = {
-  AVATAR: 5 * 1024 * 1024, // 5MB
-  DOCUMENT: 10 * 1024 * 1024, // 10MB
-  CODE_FILE: 1 * 1024 * 1024, // 1MB
-  GENERAL: 50 * 1024 * 1024, // 50MB
+  AVATAR: 5 * 1024 * 1024,
+  DOCUMENT: 10 * 1024 * 1024,
+  CODE_FILE: 1 * 1024 * 1024,
+  GENERAL: 50 * 1024 * 1024,
 } as const;
 
 export const RATE_LIMITS = {
   AUTH: {
-    WINDOW_MS: 15 * 60 * 1000, // 15 minutes
+    WINDOW_MS: 15 * 60 * 1000,
     MAX_REQUESTS: 10,
   },
   API: {
-    WINDOW_MS: 15 * 60 * 1000, // 15 minutes
+    WINDOW_MS: 15 * 60 * 1000,
     MAX_REQUESTS: 100,
   },
   AI: {
-    WINDOW_MS: 60 * 60 * 1000, // 1 hour
+    WINDOW_MS: 60 * 60 * 1000,
     MAX_REQUESTS: 50,
   },
   UPLOAD: {
-    WINDOW_MS: 15 * 60 * 1000, // 15 minutes
+    WINDOW_MS: 15 * 60 * 1000,
     MAX_REQUESTS: 10,
   },
 } as const;
@@ -143,10 +143,10 @@ export const DEFAULT_PAGINATION = {
 } as const;
 
 export const CACHE_DURATIONS = {
-  SHORT: 5 * 60, // 5 minutes
-  MEDIUM: 30 * 60, // 30 minutes
-  LONG: 24 * 60 * 60, // 24 hours
-  WEEK: 7 * 24 * 60 * 60, // 1 week
+  SHORT: 5 * 60,
+  MEDIUM: 30 * 60,
+  LONG: 24 * 60 * 60,
+  WEEK: 7 * 24 * 60 * 60,
 } as const;
 
 export const JWT_EXPIRES = {

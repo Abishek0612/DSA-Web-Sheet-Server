@@ -94,5 +94,5 @@ export const validateRating = (rating: number): boolean => {
 };
 
 export const validateTimeSpent = (timeSpent: number): boolean => {
-  return Number.isInteger(timeSpent) && timeSpent >= 0 && timeSpent <= 24 * 60; // Max 24 hours
+  return Number.isInteger(timeSpent) && timeSpent >= 0 && timeSpent <= 24 * 60;
 };

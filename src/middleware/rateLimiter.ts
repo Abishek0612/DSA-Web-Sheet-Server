@@ -16,50 +16,41 @@ const createLimiter = (windowMs: number, max: number, message: string) => {
 };
 
 export const rateLimiter = {
-  // General API rate limiting
   general: createLimiter(
-    15 * 60 * 1000, // 15 minutes
-    100, // limit each IP to 100 requests per windowMs
+    15 * 60 * 1000,
+    100,
     "Too many requests from this IP, please try again later"
   ),
 
   // Authentication rate limiting
   auth: createLimiter(
-    15 * 60 * 1000, // 15 minutes
-    10, // limit each IP to 10 auth requests per windowMs
+    15 * 60 * 1000,
+    10,
     "Too many authentication attempts, please try again later"
-  ),
-
-  // AI requests rate limiting
-  ai: createLimiter(
-    60 * 60 * 1000, // 1 hour
-    20, // limit each IP to 20 AI requests per hour
-    "Too many AI requests, please try again later"
   ),
 
   // Chat requests rate limiting
   chat: createLimiter(
-    5 * 60 * 1000, // 5 minutes
-    30, // limit each IP to 30 chat messages per 5 minutes
+    5 * 60 * 1000,
+    30,
     "Too many chat messages, please slow down"
   ),
 
   // File upload rate limiting
   upload: createLimiter(
-    15 * 60 * 1000, // 15 minutes
-    10, // limit each IP to 10 uploads per 15 minutes
+    15 * 60 * 1000,
+    10,
     "Too many file uploads, please try again later"
   ),
 
-  // Password reset rate limiting
+  // Password reset
   passwordReset: createLimiter(
-    60 * 60 * 1000, // 1 hour
-    3, // limit each IP to 3 password reset requests per hour
+    60 * 60 * 1000,
+    3,
     "Too many password reset attempts, please try again later"
   ),
 };
 
-// User-specific rate limiting (requires authentication)
 export const createUserRateLimiter = (
   windowMs: number,
   max: number,
@@ -99,14 +90,14 @@ export const createUserRateLimiter = (
 
 export const userRateLimiter = {
   ai: createUserRateLimiter(
-    60 * 60 * 1000, // 1 hour
-    50, // 50 AI requests per hour per user
+    60 * 60 * 1000,
+    50,
     "You have exceeded your AI request limit, please try again later"
   ),
 
   progress: createUserRateLimiter(
-    60 * 1000, // 1 minute
-    30, // 30 progress updates per minute per user
+    60 * 1000,
+    30,
     "Too many progress updates, please slow down"
   ),
 };

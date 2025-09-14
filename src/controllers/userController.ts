@@ -35,7 +35,6 @@ export class UserController {
         return;
       }
 
-      // Check if email is already taken by another user
       if (email !== user.email) {
         const existingUser = await User.findOne({
           email,
@@ -190,10 +189,8 @@ export class UserController {
         return;
       }
 
-      // Delete user progress
       await Progress.deleteMany({ userId: req.userId });
 
-      // Delete user account
       await User.findByIdAndDelete(req.userId);
 
       logger.info(`Account deleted for user: ${user.email}`);
@@ -246,11 +243,10 @@ export class UserController {
         return;
       }
 
-      // Import progress data
       const progressData = importData.progress.map((p: any) => ({
         ...p,
         userId: req.userId,
-        _id: undefined, // Remove old ID to create new ones
+        _id: undefined,
       }));
 
       await Progress.deleteMany({ userId: req.userId });

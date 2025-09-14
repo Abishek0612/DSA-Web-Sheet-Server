@@ -459,15 +459,12 @@ export class ProgressController {
       const lastSolvedDate = user.statistics.lastSolvedDate?.toDateString();
 
       if (lastSolvedDate === today) {
-        // Already solved something today, no streak update needed
       } else if (
         lastSolvedDate ===
         new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString()
       ) {
-        // Solved yesterday, continue streak
         user.statistics.currentStreak += 1;
       } else {
-        // Streak broken or first solve
         user.statistics.currentStreak = 1;
       }
 

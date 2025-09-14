@@ -19,9 +19,6 @@ const loginSchema = Joi.object({
   password: Joi.string().required(),
 });
 
-// @route   POST /api/auth/register
-// @desc    Register user
-// @access  Public
 router.post("/register", async (req, res) => {
   try {
     const { error } = registerSchema.validate(req.body);
@@ -31,17 +28,14 @@ router.post("/register", async (req, res) => {
 
     const { name, email, password } = req.body;
 
-    // Check if user exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // Create user
     const user = new User({ name, email, password });
     await user.save();
 
-    // Create JWT token
     const token = jwt.sign(
       { userId: user._id },
       process.env.JWT_SECRET || "fallback_secret",
@@ -59,6 +53,7 @@ router.post("/register", async (req, res) => {
         role: user.role,
         preferences: user.preferences,
         statistics: user.statistics,
+        createdAt: user.createdAt,
       },
     });
   } catch (error) {
@@ -67,9 +62,6 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// @route   POST /api/auth/login
-// @desc    Login user
-// @access  Public
 router.post("/login", async (req, res) => {
   try {
     const { error } = loginSchema.validate(req.body);
@@ -79,23 +71,19 @@ router.post("/login", async (req, res) => {
 
     const { email, password } = req.body;
 
-    // Check if user exists
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    // Check password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    // Update last login
     user.lastLogin = new Date();
     await user.save();
 
-    // Create JWT token
     const token = jwt.sign(
       { userId: user._id },
       process.env.JWT_SECRET || "fallback_secret",
@@ -113,6 +101,7 @@ router.post("/login", async (req, res) => {
         role: user.role,
         preferences: user.preferences,
         statistics: user.statistics,
+        createdAt: user.createdAt,
       },
     });
   } catch (error) {
@@ -121,9 +110,6 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// @route   GET /api/auth/me
-// @desc    Get current user
-// @access  Private
 router.get("/me", auth, async (req, res) => {
   try {
     const user = await User.findById(req.userId).select("-password");

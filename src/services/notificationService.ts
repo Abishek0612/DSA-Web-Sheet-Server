@@ -13,7 +13,6 @@ export class NotificationService {
 
       await this.emailService.sendWelcomeEmail(user.email, user.name);
 
-      // Send real-time notification
       io.to(`user-${userId}`).emit("notification", {
         type: "welcome",
         title: "Welcome to DSA Sheet!",
@@ -113,7 +112,6 @@ export class NotificationService {
       const user = await User.findById(userId);
       if (!user) return;
 
-      // Calculate weekly stats (simplified)
       const weeklyStats = {
         problemsSolved: 15,
         timeSpent: 180,
