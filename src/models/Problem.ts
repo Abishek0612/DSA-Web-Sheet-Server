@@ -1,5 +1,11 @@
 import mongoose, { Document, Schema } from "mongoose";
 
+export interface ITestCase {
+  input: string;
+  expectedOutput: string;
+  isHidden: boolean;
+}
+
 export interface IProblemStandalone extends Document {
   title: string;
   description: string;
@@ -18,17 +24,23 @@ export interface IProblemStandalone extends Document {
     output: string;
     explanation?: string;
   }>;
+  testCases: ITestCase[];
   constraints: string[];
   hints: string[];
+  template: Array<{
+    language: string;
+    code: string;
+  }>;
+  solution: Array<{
+    language: string;
+    code: string;
+    explanation: string;
+  }>;
   editorial: {
     approach: string;
     timeComplexity: string;
     spaceComplexity: string;
     explanation: string;
-    code: Array<{
-      language: string;
-      solution: string;
-    }>;
   };
   stats: {
     totalSubmissions: number;
@@ -79,19 +91,33 @@ const problemSchema = new Schema<IProblemStandalone>(
         explanation: String,
       },
     ],
+    testCases: [
+      {
+        input: { type: String, required: true },
+        expectedOutput: { type: String, required: true },
+        isHidden: { type: Boolean, default: false },
+      },
+    ],
     constraints: [String],
     hints: [String],
+    template: [
+      {
+        language: { type: String, required: true },
+        code: { type: String, required: true },
+      },
+    ],
+    solution: [
+      {
+        language: { type: String, required: true },
+        code: { type: String, required: true },
+        explanation: String,
+      },
+    ],
     editorial: {
       approach: String,
       timeComplexity: String,
       spaceComplexity: String,
       explanation: String,
-      code: [
-        {
-          language: String,
-          solution: String,
-        },
-      ],
     },
     stats: {
       totalSubmissions: { type: Number, default: 0 },

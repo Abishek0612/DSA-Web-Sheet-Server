@@ -5,7 +5,6 @@ import { Request } from "express";
 const storage = multer.memoryStorage();
 
 const fileFilter = (req: Request, file: Express.Multer.File, cb: any) => {
-  // Define allowed file types
   const allowedTypes = {
     image: ["image/jpeg", "image/png", "image/gif", "image/webp"],
     document: ["application/pdf", "text/plain", "application/json"],
@@ -26,7 +25,7 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: any) => {
 };
 
 const limits = {
-  fileSize: 10 * 1024 * 1024, // 10MB
+  fileSize: 10 * 1024 * 1024,
   files: 10,
 };
 
@@ -36,7 +35,6 @@ export const upload = multer({
   limits,
 });
 
-// Specific upload configurations
 export const avatarUpload = multer({
   storage,
   fileFilter: (req: Request, file: Express.Multer.File, cb: any) => {
@@ -47,7 +45,7 @@ export const avatarUpload = multer({
     }
   },
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB for avatars
+    fileSize: 5 * 1024 * 1024,
   },
 });
 
@@ -62,6 +60,6 @@ export const documentUpload = multer({
     }
   },
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB for documents
+    fileSize: 10 * 1024 * 1024,
   },
 });

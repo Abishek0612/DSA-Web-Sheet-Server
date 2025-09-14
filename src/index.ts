@@ -15,6 +15,8 @@ import topicRoutes from "./routes/topics";
 import progressRoutes from "./routes/progress";
 import aiRoutes from "./routes/ai";
 import userRoutes from "./routes/user";
+import codeRoutes from "./routes/code";
+import uploadRoutes from "./routes/upload";
 
 dotenv.config();
 
@@ -27,10 +29,8 @@ const io = new Server(server, {
   },
 });
 
-// Connect to MongoDB
 connectDB();
 
-// Security middleware
 app.use(helmet());
 app.use(
   cors({
@@ -39,7 +39,6 @@ app.use(
   })
 );
 
-// Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -47,7 +46,6 @@ const limiter = rateLimit({
 });
 app.use("/api/", limiter);
 
-// Middleware
 app.use(compression());
 app.use(
   morgan("combined", {
@@ -57,22 +55,20 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/topics", topicRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/code", codeRoutes);
+app.use("/api/upload", uploadRoutes);
 
-// Health check
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "OK", timestamp: new Date().toISOString() });
 });
 
-// Error handling
 app.use(errorHandler);
 
-// Socket.io
 io.on("connection", (socket) => {
   logger.info("User connected:", socket.id);
 

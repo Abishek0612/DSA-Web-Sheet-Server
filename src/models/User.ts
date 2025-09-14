@@ -82,7 +82,7 @@ const userSchema = new Schema<IUser>({
   lastLogin: Date,
 });
 
-// Hash password before saving
+// Hash
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
 
@@ -91,7 +91,7 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-// Compare password method
+// Compare
 userSchema.methods.comparePassword = async function (
   candidatePassword: string
 ): Promise<boolean> {
