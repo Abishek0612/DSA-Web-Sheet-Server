@@ -10,6 +10,7 @@ export interface IProblem {
     codeforces?: string;
     youtube?: string;
     article?: string;
+    editorial?: string;
   };
   tags: string[];
   companies: string[];
@@ -20,7 +21,10 @@ export interface IProblem {
     approach: string;
     code: string;
     explanation: string;
+    language: string;
   };
+  order: number;
+  isActive: boolean;
 }
 
 export interface ITopic extends Document {
@@ -35,6 +39,7 @@ export interface ITopic extends Document {
   estimatedTime: string;
   prerequisites: string[];
   tags: string[];
+  difficulty: "Beginner" | "Intermediate" | "Advanced";
   createdAt: Date;
   updatedAt: Date;
 }
@@ -52,6 +57,7 @@ const problemSchema = new Schema<IProblem>({
     codeforces: String,
     youtube: String,
     article: String,
+    editorial: String,
   },
   tags: [String],
   companies: [String],
@@ -62,12 +68,15 @@ const problemSchema = new Schema<IProblem>({
     approach: String,
     code: String,
     explanation: String,
+    language: { type: String, default: "javascript" },
   },
+  order: { type: Number, default: 0 },
+  isActive: { type: Boolean, default: true },
 });
 
 const topicSchema = new Schema<ITopic>(
   {
-    name: { type: String, required: true, unique: true },
+    name: { type: String, required: true, unique: true, trim: true },
     description: { type: String, required: true },
     icon: { type: String, required: true },
     category: { type: String, required: true },
@@ -78,16 +87,24 @@ const topicSchema = new Schema<ITopic>(
     estimatedTime: { type: String, required: true },
     prerequisites: [String],
     tags: [String],
+    difficulty: {
+      type: String,
+      enum: ["Beginner", "Intermediate", "Advanced"],
+      default: "Beginner",
+    },
   },
   {
     timestamps: true,
   }
 );
 
-// Update totalProblems before saving
 topicSchema.pre("save", function (next) {
-  this.totalProblems = this.problems.length;
+  this.totalProblems = this.problems.filter((p) => p.isActive).length;
   next();
 });
+
+topicSchema.index({ name: 1 });
+topicSchema.index({ category: 1 });
+topicSchema.index({ order: 1 });
 
 export default mongoose.model<ITopic>("Topic", topicSchema);

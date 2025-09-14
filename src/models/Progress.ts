@@ -6,13 +6,20 @@ export interface IProgress extends Document {
   problemId: string;
   status: "pending" | "attempted" | "solved";
   difficulty: "Easy" | "Medium" | "Hard";
-  timeSpent: number; // in minutes
+  timeSpent: number;
   attempts: number;
   lastAttempted: Date;
   solvedAt?: Date;
   notes?: string;
   solution?: string;
-  rating?: number; // 1-5 stars
+  rating?: number;
+  bookmarked: boolean;
+  submissions: Array<{
+    code: string;
+    language: string;
+    timestamp: Date;
+    result: "accepted" | "wrong_answer" | "time_limit" | "runtime_error";
+  }>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -46,30 +53,54 @@ const progressSchema = new Schema<IProgress>(
     timeSpent: {
       type: Number,
       default: 0,
+      min: 0,
     },
     attempts: {
       type: Number,
       default: 0,
+      min: 0,
     },
     lastAttempted: {
       type: Date,
       default: Date.now,
     },
     solvedAt: Date,
-    notes: String,
-    solution: String,
+    notes: {
+      type: String,
+      maxlength: 1000,
+    },
+    solution: {
+      type: String,
+      maxlength: 10000,
+    },
     rating: {
       type: Number,
       min: 1,
       max: 5,
     },
+    bookmarked: {
+      type: Boolean,
+      default: false,
+    },
+    submissions: [
+      {
+        code: String,
+        language: String,
+        timestamp: { type: Date, default: Date.now },
+        result: {
+          type: String,
+          enum: ["accepted", "wrong_answer", "time_limit", "runtime_error"],
+        },
+      },
+    ],
   },
   {
     timestamps: true,
   }
 );
 
-// Compound index for efficient queries
 progressSchema.index({ userId: 1, topicId: 1, problemId: 1 }, { unique: true });
+progressSchema.index({ userId: 1, status: 1 });
+progressSchema.index({ userId: 1, lastAttempted: -1 });
 
 export default mongoose.model<IProgress>("Progress", progressSchema);
