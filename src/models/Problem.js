@@ -87,7 +87,6 @@ const problemSchema = new Schema(
   }
 );
 
-problemSchema.index({ title: 1 });
 problemSchema.index({ difficulty: 1 });
 problemSchema.index({ category: 1 });
 problemSchema.index({ tags: 1 });

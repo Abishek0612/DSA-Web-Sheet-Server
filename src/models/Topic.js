@@ -60,7 +60,6 @@ topicSchema.pre("save", function (next) {
   next();
 });
 
-topicSchema.index({ name: 1 });
 topicSchema.index({ category: 1 });
 topicSchema.index({ order: 1 });
 
