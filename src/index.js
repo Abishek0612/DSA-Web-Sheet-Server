@@ -61,26 +61,77 @@ try {
 }
 
 const app = express();
-app.set("trust proxy", 1);
-const server = createServer(app);
 
-const io = new Server(server, {
-  cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
-    methods: ["GET", "POST"],
-    credentials: true,
-  },
-  allowEIO3: true,
-  transports: ["websocket", "polling"],
-  pingTimeout: 60000,
-  pingInterval: 25000,
-});
+app.set("trust proxy", 1);
+
+const server = createServer(app);
 
 try {
   connectDB();
 } catch (error) {
   console.error("Database connection failed:", error.message);
   process.exit(1);
+}
+
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "https://dsa-web-app.netlify.app",
+  process.env.CLIENT_URL,
+].filter(Boolean);
+
+if (process.env.ALLOWED_ORIGINS) {
+  const envOrigins = process.env.ALLOWED_ORIGINS.split(",").map((origin) =>
+    origin.trim()
+  );
+  allowedOrigins.push(...envOrigins);
+}
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    console.log("CORS Check - Origin:", origin);
+    console.log("CORS Check - Allowed Origins:", allowedOrigins);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log("CORS blocked origin:", origin);
+      callback(null, true);
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: [
+    "Origin",
+    "X-Requested-With",
+    "Content-Type",
+    "Accept",
+    "Authorization",
+    "Cache-Control",
+    "X-Access-Token",
+    "x-access-token",
+  ],
+  exposedHeaders: ["X-Total-Count", "X-Page-Count"],
+  maxAge: 86400,
+  optionsSuccessStatus: 200,
+  preflightContinue: false,
+};
+
+app.use(cors(corsOptions));
+
+app.options("*", cors(corsOptions));
+
+if (process.env.NODE_ENV !== "production") {
+  app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    console.log("Origin:", req.get("Origin"));
+    console.log("User-Agent:", req.get("User-Agent"));
+    next();
+  });
 }
 
 app.use(
@@ -91,25 +142,14 @@ app.use(
         styleSrc: ["'self'", "'unsafe-inline'"],
         scriptSrc: ["'self'"],
         imgSrc: ["'self'", "data:", "https:"],
+        connectSrc: [
+          "'self'",
+          "https://dsa-web-sheet-server.onrender.com",
+          "wss://dsa-web-sheet-server.onrender.com",
+        ],
       },
     },
-  })
-);
-
-app.use(
-  cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: [
-      "Origin",
-      "X-Requested-With",
-      "Content-Type",
-      "Accept",
-      "Authorization",
-      "Cache-Control",
-      "X-Access-Token",
-    ],
+    crossOriginEmbedderPolicy: false,
   })
 );
 
@@ -121,10 +161,19 @@ const limiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  trustProxy: true,
+  skip: (req) => {
+    return (
+      req.method === "OPTIONS" ||
+      req.url === "/health" ||
+      req.url === "/api/health"
+    );
+  },
 });
 app.use("/api/", limiter);
 
 app.use(compression());
+
 app.use(
   morgan("combined", {
     stream: {
@@ -142,9 +191,43 @@ app.get("/health", (req, res) => {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || "development",
     version: "1.0.0",
+    cors: {
+      origin: req.get("origin"),
+      clientUrl: process.env.CLIENT_URL,
+      allowedOrigins: allowedOrigins,
+    },
   });
 });
 
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    status: "OK",
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || "development",
+    version: "1.0.0",
+    aiEnabled: !!process.env.GEMINI_API_KEY,
+    emailEnabled: !!process.env.EMAIL_USER,
+    cors: {
+      origin: req.get("origin"),
+      clientUrl: process.env.CLIENT_URL,
+      allowedOrigins: allowedOrigins,
+    },
+  });
+});
+
+const io = new Server(server, {
+  cors: {
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+  allowEIO3: true,
+  transports: ["websocket", "polling"],
+  pingTimeout: 60000,
+  pingInterval: 25000,
+});
+
+// API Routes
 const topicRoutes = require("./routes/topics")(io);
 const progressRoutes = require("./routes/progress")(io);
 
@@ -156,6 +239,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/code", codeRoutes);
 app.use("/api/upload", uploadRoutes);
 
+// 404 handler for API routes
 app.use("/api/*", (req, res) => {
   res.status(404).json({
     error: "API endpoint not found",
@@ -166,6 +250,7 @@ app.use("/api/*", (req, res) => {
 
 app.use(errorHandler);
 
+// Socket authentication middleware
 io.use((socket, next) => {
   try {
     const token = socket.handshake.auth.token;
@@ -261,6 +346,8 @@ server.listen(PORT, (error) => {
   console.log(`Port: ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
   console.log(`Health Check: http://localhost:${PORT}/health`);
+  console.log(`Client URL: ${process.env.CLIENT_URL}`);
+  console.log(`Allowed Origins: ${allowedOrigins.join(", ")}`);
   console.log(
     `AI Features: ${process.env.GEMINI_API_KEY ? "Enabled" : "Disabled"}`
   );

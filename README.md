@@ -41,15 +41,18 @@ This is the backend for the DSA Web Sheet application, a platform for tracking p
     ```
 3.  Create a `.env` file in the root directory and add the following environment variables:
 
-            ```env
+                ```env
 
-        NODE_ENV=production
+            NODE_ENV=production
 
     PORT=5000
     MONGODB_URI=mongodb+srv://uabishek6:abi%40abi12@cluster0.xblmerd.mongodb.net/dsa
     JWT_SECRET=cdmcsdnkidosisdijsdci12122nsaxssa
     JWT_REFRESH_SECRET=dssjkscj213kncxxssceqa
-    CLIENT_URL=https://dsa-web-app.netlify.app
+
+CLIENT_URL=https://dsa-web-app.netlify.app
+
+ALLOWED_ORIGINS=https://dsa-web-app.netlify.app,http://localhost:5173,http://localhost:3000
 
 CLOUDINARY_CLOUD_NAME=dsjgl0cbj
 CLOUDINARY_API_KEY=859825451636775
