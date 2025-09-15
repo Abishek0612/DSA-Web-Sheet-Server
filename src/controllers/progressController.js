@@ -4,6 +4,10 @@ const Topic = require("../models/Topic");
 const { logger } = require("../utils/logger");
 
 class ProgressController {
+  constructor(io) {
+    this.io = io;
+  }
+
   getUserProgress = async (req, res) => {
     try {
       const { topicId, status, difficulty } = req.query;
@@ -78,10 +82,18 @@ class ProgressController {
 
       if (status === "solved" && oldStatus !== "solved") {
         await this.updateUserStatistics(req.userId, problem.difficulty);
-
         const user = await User.findById(req.userId);
 
         if (this.io) {
+          this.io.to(`user-${req.userId}`).emit("notification", {
+            id: Date.now().toString(),
+            type: "success",
+            title: "Problem Solved! 🎉",
+            message: `Great job solving "${problem.name}"!`,
+            sound: true,
+            timestamp: new Date().toISOString(),
+          });
+
           this.io.to(`user-${req.userId}`).emit("progress-updated", {
             type: "problem-solved",
             problemName: problem.name,
@@ -91,14 +103,9 @@ class ProgressController {
             timestamp: new Date().toISOString(),
           });
 
-          this.io.to(`user-${req.userId}`).emit("notification", {
-            id: Date.now().toString(),
-            type: "success",
-            title: "Problem Solved! 🎉",
-            message: `Great job solving "${problem.name}"!`,
-            sound: true,
-            timestamp: new Date().toISOString(),
-          });
+          logger.info(
+            `Problem solved notification sent to user ${req.userId}: ${problem.name}`
+          );
         }
       }
 

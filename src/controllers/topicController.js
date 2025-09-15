@@ -3,6 +3,10 @@ const Progress = require("../models/Progress");
 const { logger } = require("../utils/logger");
 
 class TopicController {
+  constructor(io) {
+    this.io = io;
+  }
+
   getTopics = async (req, res) => {
     try {
       const { category, difficulty, search, sort = "order" } = req.query;
@@ -182,6 +186,21 @@ class TopicController {
       const topic = new Topic(req.body);
       await topic.save();
 
+      if (this.io) {
+        this.io.emit("notification", {
+          id: Date.now().toString(),
+          type: "info",
+          title: "New Topic Added! 🆕",
+          message: `A new topic "${topic.name}" has been added`,
+          sound: true,
+          timestamp: new Date().toISOString(),
+        });
+
+        logger.info(
+          `Topic creation notification sent to all users: ${topic.name}`
+        );
+      }
+
       logger.info(`Topic created: ${topic.name} by user ${req.userId}`);
       res.status(201).json(topic);
     } catch (error) {
@@ -206,6 +225,21 @@ class TopicController {
       if (!topic) {
         res.status(404).json({ message: "Topic not found" });
         return;
+      }
+
+      if (this.io) {
+        this.io.emit("notification", {
+          id: Date.now().toString(),
+          type: "info",
+          title: "Topic Updated! ✏️",
+          message: `Topic "${topic.name}" has been updated`,
+          sound: true,
+          timestamp: new Date().toISOString(),
+        });
+
+        logger.info(
+          `Topic update notification sent to all users: ${topic.name}`
+        );
       }
 
       logger.info(`Topic updated: ${topic.name} by user ${req.userId}`);
@@ -253,11 +287,15 @@ class TopicController {
         this.io.emit("notification", {
           id: Date.now().toString(),
           type: "info",
-          title: "New Problem Added! ",
+          title: "New Problem Added! 💡",
           message: `A new ${newProblem.difficulty} problem "${newProblem.name}" has been added to ${topic.name}`,
           sound: true,
           timestamp: new Date().toISOString(),
         });
+
+        logger.info(
+          `Problem addition notification sent to all users: ${newProblem.name} in ${topic.name}`
+        );
       }
 
       logger.info(
@@ -269,6 +307,7 @@ class TopicController {
       res.status(500).json({ message: "Server error" });
     }
   };
+
   updateProblem = async (req, res) => {
     try {
       const { topicId, problemId } = req.params;
@@ -287,6 +326,21 @@ class TopicController {
 
       Object.assign(problem, req.body);
       await topic.save();
+
+      if (this.io) {
+        this.io.emit("notification", {
+          id: Date.now().toString(),
+          type: "info",
+          title: "Problem Updated! ✏️",
+          message: `Problem "${problem.name}" in ${topic.name} has been updated`,
+          sound: true,
+          timestamp: new Date().toISOString(),
+        });
+
+        logger.info(
+          `Problem update notification sent to all users: ${problem.name} in ${topic.name}`
+        );
+      }
 
       logger.info(
         `Problem updated in topic: ${topic.name} by user ${req.userId}`

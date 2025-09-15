@@ -1,12 +1,12 @@
 require("dotenv").config();
 
 process.on("uncaughtException", (error) => {
-  console.error(" Uncaught Exception:", error);
+  console.error("❌ Uncaught Exception:", error);
   process.exit(1);
 });
 
 process.on("unhandledRejection", (reason, promise) => {
-  console.error(" Unhandled Rejection at:", promise, "reason:", reason);
+  console.error("❌ Unhandled Rejection at:", promise, "reason:", reason);
   process.exit(1);
 });
 
@@ -23,7 +23,7 @@ let connectDB, errorHandler, logger;
 try {
   connectDB = require("./config/database");
 } catch (error) {
-  console.error(" Error loading database config:", error.message);
+  console.error("❌ Error loading database config:", error.message);
   process.exit(1);
 }
 
@@ -47,21 +47,13 @@ try {
   };
 }
 
-let authRoutes,
-  topicRoutes,
-  progressRoutes,
-  aiRoutes,
-  userRoutes,
-  codeRoutes,
-  uploadRoutes;
+let authRoutes, userRoutes, codeRoutes, uploadRoutes, aiRoutes;
 try {
   authRoutes = require("./routes/auth");
-  topicRoutes = require("./routes/topics");
-  progressRoutes = require("./routes/progress");
-  aiRoutes = require("./routes/ai");
   userRoutes = require("./routes/user");
   codeRoutes = require("./routes/code");
   uploadRoutes = require("./routes/upload");
+  aiRoutes = require("./routes/ai");
 } catch (error) {
   console.error("❌ Error loading routes:", error.message);
   process.exit(1);
@@ -149,23 +141,12 @@ app.get("/health", (req, res) => {
   });
 });
 
+const topicRoutes = require("./routes/topics")(io);
+const progressRoutes = require("./routes/progress")(io);
+
 app.use("/api/auth", authRoutes);
-app.use(
-  "/api/topics",
-  (req, res, next) => {
-    req.io = io;
-    next();
-  },
-  topicRoutes
-);
-app.use(
-  "/api/progress",
-  (req, res, next) => {
-    req.io = io;
-    next();
-  },
-  progressRoutes
-);
+app.use("/api/topics", topicRoutes);
+app.use("/api/progress", progressRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/code", codeRoutes);
@@ -202,6 +183,7 @@ io.use((socket, next) => {
   }
 });
 
+// Socket connection handling
 io.on("connection", (socket) => {
   logger.info(`User connected: ${socket.userId}`);
 
@@ -231,19 +213,19 @@ io.on("connection", (socket) => {
 });
 
 const gracefulShutdown = (signal) => {
-  console.log(`\n Received ${signal}. Starting graceful shutdown...`);
+  console.log(`\n🛑 Received ${signal}. Starting graceful shutdown...`);
 
   server.close((error) => {
     if (error) {
-      console.error(" Error during server shutdown:", error);
+      console.error("❌ Error during server shutdown:", error);
       process.exit(1);
     }
 
-    console.log(" HTTP server closed");
+    console.log("✅ HTTP server closed");
 
     if (require("mongoose").connection.readyState === 1) {
       require("mongoose").connection.close(() => {
-        console.log(" Database connection closed");
+        console.log("✅ Database connection closed");
         process.exit(0);
       });
     } else {
@@ -253,7 +235,7 @@ const gracefulShutdown = (signal) => {
 
   setTimeout(() => {
     console.error(
-      " Could not close connections in time, forcefully shutting down"
+      "❌ Could not close connections in time, forcefully shutting down"
     );
     process.exit(1);
   }, 10000);
@@ -266,7 +248,7 @@ const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, (error) => {
   if (error) {
-    console.error(" Failed to start server:", error);
+    console.error("❌ Failed to start server:", error);
     process.exit(1);
   }
 
@@ -280,7 +262,7 @@ server.listen(PORT, (error) => {
     }`
   );
   console.log(
-    ` Email Service: ${process.env.EMAIL_USER ? "✅ Enabled" : "❌ Disabled"}`
+    `📧 Email Service: ${process.env.EMAIL_USER ? "✅ Enabled" : "❌ Disabled"}`
   );
   console.log(`🎉 Ready to accept connections!`);
 
