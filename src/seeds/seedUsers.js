@@ -25,7 +25,7 @@ const sampleUsers = [
     name: "Demo Student",
     email: "demo@dsasheet.com",
     password: "Demo123!",
-    role: "student",
+    role: "admin",
     preferences: {
       theme: "light",
       language: "python",
