@@ -49,7 +49,7 @@ This is the backend for the DSA Web Sheet application, a platform for tracking p
     MONGODB_URI=mongodb+srv://uabishek6:abi%40abi12@cluster0.xblmerd.mongodb.net/dsa
     JWT_SECRET=cdmcsdnkidosisdijsdci12122nsaxssa
     JWT_REFRESH_SECRET=dssjkscj213kncxxssceqa
-    CLIENT_URL=https://dsa-web-app.netlify.app/login
+    CLIENT_URL=https://dsa-web-app.netlify.app
 
 CLOUDINARY_CLOUD_NAME=dsjgl0cbj
 CLOUDINARY_API_KEY=859825451636775
