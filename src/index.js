@@ -1,12 +1,12 @@
 require("dotenv").config();
 
 process.on("uncaughtException", (error) => {
-  console.error("❌ Uncaught Exception:", error);
+  console.error("Uncaught Exception:", error);
   process.exit(1);
 });
 
 process.on("unhandledRejection", (reason, promise) => {
-  console.error("❌ Unhandled Rejection at:", promise, "reason:", reason);
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
   process.exit(1);
 });
 
@@ -18,12 +18,13 @@ const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
 const { createServer } = require("http");
 const { Server } = require("socket.io");
+const jwt = require("jsonwebtoken");
 
 let connectDB, errorHandler, logger;
 try {
   connectDB = require("./config/database");
 } catch (error) {
-  console.error("❌ Error loading database config:", error.message);
+  console.error("Error loading database config:", error.message);
   process.exit(1);
 }
 
@@ -31,7 +32,7 @@ try {
   const errorHandlerModule = require("./middleware/errorHandler");
   errorHandler = errorHandlerModule.errorHandler;
 } catch (error) {
-  console.error("❌ Error loading error handler:", error.message);
+  console.error("Error loading error handler:", error.message);
   process.exit(1);
 }
 
@@ -39,7 +40,7 @@ try {
   const loggerModule = require("./utils/logger");
   logger = loggerModule.logger;
 } catch (error) {
-  console.error("❌ Error loading logger:", error.message);
+  console.error("Error loading logger:", error.message);
   logger = {
     info: console.log,
     error: console.error,
@@ -55,7 +56,7 @@ try {
   uploadRoutes = require("./routes/upload");
   aiRoutes = require("./routes/ai");
 } catch (error) {
-  console.error("❌ Error loading routes:", error.message);
+  console.error("Error loading routes:", error.message);
   process.exit(1);
 }
 
@@ -70,12 +71,14 @@ const io = new Server(server, {
   },
   allowEIO3: true,
   transports: ["websocket", "polling"],
+  pingTimeout: 60000,
+  pingInterval: 25000,
 });
 
 try {
   connectDB();
 } catch (error) {
-  console.error("❌ Database connection failed:", error.message);
+  console.error("Database connection failed:", error.message);
   process.exit(1);
 }
 
@@ -167,23 +170,24 @@ io.use((socket, next) => {
     const token = socket.handshake.auth.token;
 
     if (!token) {
+      logger.error("Socket authentication failed: No token provided");
       return next(new Error("Authentication error"));
     }
 
-    const jwt = require("jsonwebtoken");
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET || "fallback_secret"
     );
+
     socket.userId = decoded.userId;
+    logger.info(`Socket authenticated for user: ${socket.userId}`);
     next();
   } catch (error) {
-    logger.error("Socket authentication error:", error);
+    logger.error("Socket authentication error:", error.message);
     next(new Error("Authentication error"));
   }
 });
 
-// Socket connection handling
 io.on("connection", (socket) => {
   logger.info(`User connected: ${socket.userId}`);
 
@@ -213,19 +217,19 @@ io.on("connection", (socket) => {
 });
 
 const gracefulShutdown = (signal) => {
-  console.log(`\n🛑 Received ${signal}. Starting graceful shutdown...`);
+  console.log(`\nReceived ${signal}. Starting graceful shutdown...`);
 
   server.close((error) => {
     if (error) {
-      console.error("❌ Error during server shutdown:", error);
+      console.error("Error during server shutdown:", error);
       process.exit(1);
     }
 
-    console.log("✅ HTTP server closed");
+    console.log("HTTP server closed");
 
     if (require("mongoose").connection.readyState === 1) {
       require("mongoose").connection.close(() => {
-        console.log("✅ Database connection closed");
+        console.log("Database connection closed");
         process.exit(0);
       });
     } else {
@@ -235,7 +239,7 @@ const gracefulShutdown = (signal) => {
 
   setTimeout(() => {
     console.error(
-      "❌ Could not close connections in time, forcefully shutting down"
+      "Could not close connections in time, forcefully shutting down"
     );
     process.exit(1);
   }, 10000);
@@ -248,23 +252,21 @@ const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, (error) => {
   if (error) {
-    console.error("❌ Failed to start server:", error);
+    console.error("Failed to start server:", error);
     process.exit(1);
   }
 
-  console.log(`🚀 DSA Sheet Server is running!`);
-  console.log(`📡 Port: ${PORT}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
-  console.log(`🔗 Health Check: http://localhost:${PORT}/health`);
+  console.log(`DSA Sheet Server is running!`);
+  console.log(`Port: ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+  console.log(`Health Check: http://localhost:${PORT}/health`);
   console.log(
-    `🤖 AI Features: ${
-      process.env.GEMINI_API_KEY ? "✅ Enabled" : "❌ Disabled"
-    }`
+    `AI Features: ${process.env.GEMINI_API_KEY ? "Enabled" : "Disabled"}`
   );
   console.log(
-    `📧 Email Service: ${process.env.EMAIL_USER ? "✅ Enabled" : "❌ Disabled"}`
+    `Email Service: ${process.env.EMAIL_USER ? "Enabled" : "Disabled"}`
   );
-  console.log(`🎉 Ready to accept connections!`);
+  console.log(`Ready to accept connections!`);
 
   logger.info(`Server running on port ${PORT}`);
 });
