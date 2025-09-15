@@ -1,30 +1,31 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { GoogleGenAI } = require("@google/genai");
 const { AIService } = require("../services/aiService");
 const { logger } = require("../utils/logger");
 
 class AIController {
   constructor() {
     this.aiService = new AIService();
-    this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
-    // Bind methods to ensure 'this' context
-    this.generateResearch = this.generateResearch.bind(this);
-    this.generateProblems = this.generateProblems.bind(this);
-    this.chatWithAI = this.chatWithAI.bind(this);
-    this.explainSolution = this.explainSolution.bind(this);
-    this.reviewCode = this.reviewCode.bind(this);
-    this.generateHint = this.generateHint.bind(this);
-    this.getChatHistory = this.getChatHistory.bind(this);
-    this.clearChatHistory = this.clearChatHistory.bind(this);
+    // Initialize GoogleGenAI if API key exists
+    if (process.env.GEMINI_API_KEY) {
+      this.genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    } else {
+      logger.warn("GEMINI_API_KEY not found in environment variables");
+    }
   }
 
-  async generateResearch(req, res) {
+  generateResearch = async (req, res) => {
     try {
       const { topic, context } = req.body;
 
       if (!topic) {
-        res.status(400).json({ message: "Topic is required" });
-        return;
+        return res.status(400).json({ message: "Topic is required" });
+      }
+
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(500).json({
+          message: "AI service not configured. Please contact administrator.",
+        });
       }
 
       const research = await this.aiService.generateResearch(topic, context);
@@ -40,19 +41,27 @@ class AIController {
       });
     } catch (error) {
       logger.error("AI research error:", error);
-      res.status(500).json({ message: "Failed to generate research" });
+      res.status(500).json({
+        message: error.message || "Failed to generate research",
+        ...(process.env.NODE_ENV === "development" && { stack: error.stack }),
+      });
     }
-  }
+  };
 
-  async generateProblems(req, res) {
+  generateProblems = async (req, res) => {
     try {
       const { language, difficulty, topic, count = 5 } = req.body;
 
       if (!language || !difficulty || !topic) {
-        res
-          .status(400)
-          .json({ message: "Language, difficulty, and topic are required" });
-        return;
+        return res.status(400).json({
+          message: "Language, difficulty, and topic are required",
+        });
+      }
+
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(500).json({
+          message: "AI service not configured. Please contact administrator.",
+        });
       }
 
       const problems = await this.aiService.generateProblems({
@@ -73,17 +82,24 @@ class AIController {
       });
     } catch (error) {
       logger.error("Problem generation error:", error);
-      res.status(500).json({ message: "Failed to generate problems" });
+      res.status(500).json({
+        message: error.message || "Failed to generate problems",
+      });
     }
-  }
+  };
 
-  async chatWithAI(req, res) {
+  chatWithAI = async (req, res) => {
     try {
       const { message, context } = req.body;
 
       if (!message) {
-        res.status(400).json({ message: "Message is required" });
-        return;
+        return res.status(400).json({ message: "Message is required" });
+      }
+
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(500).json({
+          message: "AI service not configured. Please contact administrator.",
+        });
       }
 
       const response = await this.aiService.chatWithAI(message, context);
@@ -96,17 +112,26 @@ class AIController {
       });
     } catch (error) {
       logger.error("AI chat error:", error);
-      res.status(500).json({ message: "Failed to get AI response" });
+      res.status(500).json({
+        message: error.message || "Failed to get AI response",
+      });
     }
-  }
+  };
 
-  async explainSolution(req, res) {
+  explainSolution = async (req, res) => {
     try {
       const { code, language, problemDescription } = req.body;
 
       if (!code || !language) {
-        res.status(400).json({ message: "Code and language are required" });
-        return;
+        return res
+          .status(400)
+          .json({ message: "Code and language are required" });
+      }
+
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(500).json({
+          message: "AI service not configured. Please contact administrator.",
+        });
       }
 
       const explanation = await this.aiService.explainSolution(
@@ -121,17 +146,26 @@ class AIController {
       });
     } catch (error) {
       logger.error("Solution explanation error:", error);
-      res.status(500).json({ message: "Failed to explain solution" });
+      res.status(500).json({
+        message: error.message || "Failed to explain solution",
+      });
     }
-  }
+  };
 
-  async reviewCode(req, res) {
+  reviewCode = async (req, res) => {
     try {
       const { code, language, problemDescription } = req.body;
 
       if (!code || !language) {
-        res.status(400).json({ message: "Code and language are required" });
-        return;
+        return res
+          .status(400)
+          .json({ message: "Code and language are required" });
+      }
+
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(500).json({
+          message: "AI service not configured. Please contact administrator.",
+        });
       }
 
       const review = await this.aiService.reviewCode(
@@ -146,17 +180,26 @@ class AIController {
       });
     } catch (error) {
       logger.error("Code review error:", error);
-      res.status(500).json({ message: "Failed to review code" });
+      res.status(500).json({
+        message: error.message || "Failed to review code",
+      });
     }
-  }
+  };
 
-  async generateHint(req, res) {
+  generateHint = async (req, res) => {
     try {
       const { problemDescription, difficulty, currentApproach } = req.body;
 
       if (!problemDescription) {
-        res.status(400).json({ message: "Problem description is required" });
-        return;
+        return res
+          .status(400)
+          .json({ message: "Problem description is required" });
+      }
+
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(500).json({
+          message: "AI service not configured. Please contact administrator.",
+        });
       }
 
       const hint = await this.aiService.generateHint(
@@ -171,11 +214,13 @@ class AIController {
       });
     } catch (error) {
       logger.error("Hint generation error:", error);
-      res.status(500).json({ message: "Failed to generate hint" });
+      res.status(500).json({
+        message: error.message || "Failed to generate hint",
+      });
     }
-  }
+  };
 
-  async getChatHistory(req, res) {
+  getChatHistory = async (req, res) => {
     try {
       const { limit = 50, page = 1 } = req.query;
 
@@ -192,16 +237,16 @@ class AIController {
       logger.error("Get chat history error:", error);
       res.status(500).json({ message: "Failed to get chat history" });
     }
-  }
+  };
 
-  async clearChatHistory(req, res) {
+  clearChatHistory = async (req, res) => {
     try {
       res.json({ message: "Chat history cleared successfully" });
     } catch (error) {
       logger.error("Clear chat history error:", error);
       res.status(500).json({ message: "Failed to clear chat history" });
     }
-  }
+  };
 }
 
 module.exports = { AIController };
