@@ -245,8 +245,20 @@ class TopicController {
         return;
       }
 
-      topic.problems.push(req.body);
+      const newProblem = req.body;
+      topic.problems.push(newProblem);
       await topic.save();
+
+      if (this.io) {
+        this.io.emit("notification", {
+          id: Date.now().toString(),
+          type: "info",
+          title: "New Problem Added! ",
+          message: `A new ${newProblem.difficulty} problem "${newProblem.name}" has been added to ${topic.name}`,
+          sound: true,
+          timestamp: new Date().toISOString(),
+        });
+      }
 
       logger.info(
         `Problem added to topic: ${topic.name} by user ${req.userId}`
@@ -257,7 +269,6 @@ class TopicController {
       res.status(500).json({ message: "Server error" });
     }
   };
-
   updateProblem = async (req, res) => {
     try {
       const { topicId, problemId } = req.params;

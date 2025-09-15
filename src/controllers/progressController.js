@@ -46,6 +46,8 @@ class ProgressController {
         problemId,
       });
 
+      const oldStatus = progress?.status;
+
       if (progress) {
         progress.status = status;
         progress.timeSpent += timeSpent || 0;
@@ -74,8 +76,30 @@ class ProgressController {
 
       await progress.save();
 
-      if (status === "solved") {
+      if (status === "solved" && oldStatus !== "solved") {
         await this.updateUserStatistics(req.userId, problem.difficulty);
+
+        const user = await User.findById(req.userId);
+
+        if (this.io) {
+          this.io.to(`user-${req.userId}`).emit("progress-updated", {
+            type: "problem-solved",
+            problemName: problem.name,
+            topicName: topic.name,
+            difficulty: problem.difficulty,
+            userStats: user.statistics,
+            timestamp: new Date().toISOString(),
+          });
+
+          this.io.to(`user-${req.userId}`).emit("notification", {
+            id: Date.now().toString(),
+            type: "success",
+            title: "Problem Solved! 🎉",
+            message: `Great job solving "${problem.name}"!`,
+            sound: true,
+            timestamp: new Date().toISOString(),
+          });
+        }
       }
 
       logger.info(
