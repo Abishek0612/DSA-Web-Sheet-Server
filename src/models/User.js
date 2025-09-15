@@ -56,6 +56,8 @@ const userSchema = new Schema({
     default: Date.now,
   },
   lastLogin: Date,
+  passwordResetToken: String,
+  passwordResetExpires: Date,
 });
 
 userSchema.pre("save", async function (next) {

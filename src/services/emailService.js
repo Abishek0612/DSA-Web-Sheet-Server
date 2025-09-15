@@ -9,10 +9,10 @@ class EmailService {
 
     try {
       if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-        this.transporter = nodemailer.createTransporter({
+        this.transporter = nodemailer.createTransport({
           host: process.env.EMAIL_HOST || "smtp.gmail.com",
-          port: parseInt(process.env.EMAIL_PORT || "587"),
-          secure: false,
+          port: parseInt(process.env.EMAIL_PORT || "465"),
+          secure: true,
           auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS,
@@ -36,7 +36,9 @@ class EmailService {
 
     try {
       await this.transporter.sendMail({
-        from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+        from: `"${process.env.APP_NAME || "DSA Sheet"}" <${
+          process.env.EMAIL_FROM || process.env.EMAIL_USER
+        }>`,
         ...options,
       });
       logger.info(`Email sent to: ${options.to}`);
@@ -55,7 +57,7 @@ class EmailService {
   }
 
   async sendPasswordResetEmail(to, resetToken) {
-    const resetUrl = `${process.env.CLIENT_URL}/reset-password?token=${resetToken}`;
+    const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
     const html = emailTemplates.passwordReset(resetUrl);
     await this.sendEmail({
       to,

@@ -1,17 +1,9 @@
-const { GoogleGenAI } = require("@google/genai");
 const { AIService } = require("../services/aiService");
 const { logger } = require("../utils/logger");
 
 class AIController {
   constructor() {
     this.aiService = new AIService();
-
-    // Initialize GoogleGenAI if API key exists
-    if (process.env.GEMINI_API_KEY) {
-      this.genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-    } else {
-      logger.warn("GEMINI_API_KEY not found in environment variables");
-    }
   }
 
   generateResearch = async (req, res) => {
@@ -20,12 +12,6 @@ class AIController {
 
       if (!topic) {
         return res.status(400).json({ message: "Topic is required" });
-      }
-
-      if (!process.env.GEMINI_API_KEY) {
-        return res.status(500).json({
-          message: "AI service not configured. Please contact administrator.",
-        });
       }
 
       const research = await this.aiService.generateResearch(topic, context);
@@ -55,12 +41,6 @@ class AIController {
       if (!language || !difficulty || !topic) {
         return res.status(400).json({
           message: "Language, difficulty, and topic are required",
-        });
-      }
-
-      if (!process.env.GEMINI_API_KEY) {
-        return res.status(500).json({
-          message: "AI service not configured. Please contact administrator.",
         });
       }
 
@@ -96,12 +76,6 @@ class AIController {
         return res.status(400).json({ message: "Message is required" });
       }
 
-      if (!process.env.GEMINI_API_KEY) {
-        return res.status(500).json({
-          message: "AI service not configured. Please contact administrator.",
-        });
-      }
-
       const response = await this.aiService.chatWithAI(message, context);
 
       logger.info(`AI chat response generated for user ${req.userId}`);
@@ -126,12 +100,6 @@ class AIController {
         return res
           .status(400)
           .json({ message: "Code and language are required" });
-      }
-
-      if (!process.env.GEMINI_API_KEY) {
-        return res.status(500).json({
-          message: "AI service not configured. Please contact administrator.",
-        });
       }
 
       const explanation = await this.aiService.explainSolution(
@@ -162,12 +130,6 @@ class AIController {
           .json({ message: "Code and language are required" });
       }
 
-      if (!process.env.GEMINI_API_KEY) {
-        return res.status(500).json({
-          message: "AI service not configured. Please contact administrator.",
-        });
-      }
-
       const review = await this.aiService.reviewCode(
         code,
         language,
@@ -194,12 +156,6 @@ class AIController {
         return res
           .status(400)
           .json({ message: "Problem description is required" });
-      }
-
-      if (!process.env.GEMINI_API_KEY) {
-        return res.status(500).json({
-          message: "AI service not configured. Please contact administrator.",
-        });
       }
 
       const hint = await this.aiService.generateHint(

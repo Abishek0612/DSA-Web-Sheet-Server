@@ -1,11 +1,14 @@
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const User = require("../models/User");
 const { AuthService } = require("../services/authService");
+const { EmailService } = require("../services/emailService");
 const { logger } = require("../utils/logger");
 
 class AuthController {
   constructor() {
     this.authService = new AuthService();
+    this.emailService = new EmailService();
   }
 
   register = async (req, res) => {
@@ -76,6 +79,57 @@ class AuthController {
       });
     } catch (error) {
       logger.error("Login error:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  };
+
+  forgotPassword = async (req, res) => {
+    try {
+      const { email } = req.body;
+      const user = await User.findOne({ email });
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const resetToken = crypto.randomBytes(20).toString("hex");
+      user.passwordResetToken = resetToken;
+      user.passwordResetExpires = Date.now() + 3600000;
+
+      await user.save();
+      await this.emailService.sendPasswordResetEmail(email, resetToken);
+
+      res.json({ message: "Password reset email sent" });
+    } catch (error) {
+      logger.error("Forgot password error:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  };
+
+  resetPassword = async (req, res) => {
+    try {
+      const { token } = req.params;
+      const { password } = req.body;
+
+      const user = await User.findOne({
+        passwordResetToken: token,
+        passwordResetExpires: { $gt: Date.now() },
+      });
+
+      if (!user) {
+        return res
+          .status(400)
+          .json({ message: "Password reset token is invalid or has expired" });
+      }
+
+      user.password = password;
+      user.passwordResetToken = undefined;
+      user.passwordResetExpires = undefined;
+
+      await user.save();
+      res.json({ message: "Password updated successfully" });
+    } catch (error) {
+      logger.error("Reset password error:", error);
       res.status(500).json({ message: "Server error" });
     }
   };
