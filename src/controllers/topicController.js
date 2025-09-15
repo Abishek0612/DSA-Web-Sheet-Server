@@ -283,18 +283,20 @@ class TopicController {
       topic.problems.push(newProblem);
       await topic.save();
 
+      const addedProblem = topic.problems[topic.problems.length - 1];
+
       if (this.io) {
         this.io.emit("notification", {
           id: Date.now().toString(),
           type: "info",
           title: "New Problem Added! 💡",
-          message: `A new ${newProblem.difficulty} problem "${newProblem.name}" has been added to ${topic.name}`,
+          message: `A new ${addedProblem.difficulty} problem "${addedProblem.name}" has been added to ${topic.name}`,
           sound: true,
           timestamp: new Date().toISOString(),
         });
 
         logger.info(
-          `Problem addition notification sent to all users: ${newProblem.name} in ${topic.name}`
+          `Problem addition notification sent to all users: ${addedProblem.name} in ${topic.name}`
         );
       }
 
@@ -324,6 +326,7 @@ class TopicController {
         return;
       }
 
+      const oldName = problem.name;
       Object.assign(problem, req.body);
       await topic.save();
 
