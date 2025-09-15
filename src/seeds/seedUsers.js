@@ -53,7 +53,15 @@ const seedUsers = async () => {
         await user.save();
         logger.info(`Created user: ${userData.email}`);
       } else {
-        logger.info(`User already exists: ${userData.email}`);
+        if (existingUser.role !== userData.role) {
+          existingUser.role = userData.role;
+          await existingUser.save();
+          logger.info(
+            `Updated user role: ${userData.email} -> ${userData.role}`
+          );
+        } else {
+          logger.info(`User already exists: ${userData.email}`);
+        }
       }
     }
 
